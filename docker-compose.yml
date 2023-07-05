@@ -66,6 +66,43 @@ services:
       - kafka
       - zookeeper
 
+  spark:
+    image: docker.io/bitnami/spark:3.3
+    environment:
+      - SPARK_MODE=master
+    networks:
+      - broker-kafka
+    ports:
+      - '8080:8080'
+      - '4040:4040'
+      - '7077:7077'
+    volumes:
+      - ./bitnami/spark/data:/data
+      - ./spark:/src
+
+  spark-worker:
+    image: docker.io/bitnami/spark:3.3
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=4G
+      - SPARK_EXECUTOR_MEMORY=4G
+      - SPARK_WORKER_CORES=4
+    networks:
+      - broker-kafka
+
+  db:
+    image: postgres:14.1
+    restart: always
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=logs
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+
 networks:
   broker-kafka:
     driver: bridge
